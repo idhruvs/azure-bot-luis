@@ -66,8 +66,8 @@ bot.dialog('GreetingDialog',
 
 bot.dialog('Branch-Locater',
     (session, args) => {
-        var location = JSON.stringify(builder.EntityRecognizer.findEntity(args.intent.entities, 'City'));
-        session.send('Sure! Let me just look up the nearest branch in \'%s\' up for you! ', location);
+        var location = builder.EntityRecognizer.findEntity(args.intent.entities, 'City');
+        session.send('Sure! Let me just look up the nearest branch in \'%s\' up for you! ', location['entity']);
         session.endDialog();
     }
 ).triggerAction({
