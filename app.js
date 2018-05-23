@@ -65,12 +65,15 @@ bot.dialog('GreetingDialog',
 
 bot.dialog('Branch-Locater',
     (session) => {
-        session.send('You initiated branch search \'%s\'.', session.message.text);
+        session.send('Let me just look that up for you!');
+        console.log(session);
+        session.send('The nearest branch in ', session.message.text, 'is at.... ');
         session.endDialog();
     }
 ).triggerAction({
     matches: 'Branch-Locater'
 })
+
 
 bot.dialog('CancelDialog',
     (session) => {
