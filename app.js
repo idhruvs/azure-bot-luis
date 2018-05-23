@@ -63,6 +63,15 @@ bot.dialog('GreetingDialog',
     matches: 'Greeting'
 })
 
+bot.dialog('Branch-Locater',
+    (session) => {
+        session.send('You initiated branch search \'%s\'.', session.message.text);
+        session.endDialog();
+    }
+).triggerAction({
+    matches: 'Branch-Locater'
+})
+
 bot.dialog('HelpDialog',
     (session) => {
         session.send('You reached the Help intent. You said \'%s\'.', session.message.text);
