@@ -57,7 +57,7 @@ bot.recognizer(recognizer);
 // See https://docs.microsoft.com/en-us/bot-framework/nodejs/bot-builder-nodejs-recognize-intent-luis 
 bot.dialog('GreetingDialog',
     (session) => {
-        session.send('You reached the Greeting intent. You said.\'%s\' ', session.message.text);
+        session.send('Hello! Welcome to YBS Chat. How may I help you?');
         session.endDialog();
     }
 ).triggerAction({
@@ -66,8 +66,8 @@ bot.dialog('GreetingDialog',
 
 bot.dialog('Branch-Locater',
     (session, args) => {
-        var location = builder.EntityRecognizer.findEntity(args.intent.entities, 'City');
-        session.send('Let me just look up store locator at \'%s\' up for you! ', location);
+        var location = JSON.stringify(builder.EntityRecognizer.findEntity(args.intent.entities, 'City'));
+        session.send('Sure! Let me just look up the nearest branch in \'%s\' up for you! ', location);
         session.endDialog();
     }
 ).triggerAction({
