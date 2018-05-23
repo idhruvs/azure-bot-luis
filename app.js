@@ -65,8 +65,9 @@ bot.dialog('GreetingDialog',
 })
 
 bot.dialog('Branch-Locater',
-    (session) => {
-        session.send('Let me just look that up for you!');
+    (session, args) => {
+        var location = builder.EntityRecognizer.findEntity(args.intent.entities, 'City');
+        session.send('Let me just look up store locator at \'%s\' up for you! ', location);
         session.endDialog();
     }
 ).triggerAction({
