@@ -5,42 +5,12 @@ A simple Language Understanding (LUIS) bot for the Microsoft Bot Framework.
 var restify = require('restify');
 var builder = require('botbuilder');
 var botbuilder_azure = require("botbuilder-azure");
-var fetch = require('node-fetch');
-var config= require('./config.js');
 
-var accessToken = '';
 // Setup Restify Server
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, '127.0.0.1' ,function () {
     console.log('%s listening to %s', server.name, server.url); 
 });
-  
-_initiateTokenFetch = async () => {
-    console.log('Initiating Token Fetch Action');
-    try {
-        const reqHeaders = {
-            "Authorization" : "Basic c1FwRWRBTjIyZ01neXo4VWMwVXhta0VlOUF3emJJa3E6QXB6RW1SMTFQcmJhMEtWcw==",
-            "Content-Type" : "application/x-www-form-urlencoded"
-        };
-        const reqBody = {
-            "grant_type": "client_credentials"
-        }
-        console.log(reqHeaders);
-        console.log(JSON.stringify(reqBody));
-        const tokenResponse = await fetch(config.TOKEN_URL, {
-            method: 'POST',
-            headers: reqHeaders,
-            body: JSON.stringify(reqBody)
-        });
-    
-        const responseBody = await tokenResponse.json();
-        console.log(responseBody);
-        accessToken = responseBody['access_token'];
-        console.log(accessToken);
-    } catch(e) {
-        console.log(e);
-    }
-}
 
 
 // Create chat connector for communicating with the Bot Framework Service
@@ -87,8 +57,7 @@ bot.recognizer(recognizer);
 // See https://docs.microsoft.com/en-us/bot-framework/nodejs/bot-builder-nodejs-recognize-intent-luis 
 bot.dialog('GreetingDialog',
     (session) => {
-        // _initiateTokenFetch();
-        session.send('You reached the Greeting intent. You said.\'%s\' ', accessToken);
+        session.send('You reached the Greeting intent. You said.\'%s\' ', session.message.text);
         session.endDialog();
     }
 ).triggerAction({
@@ -98,8 +67,6 @@ bot.dialog('GreetingDialog',
 bot.dialog('Branch-Locater',
     (session) => {
         session.send('Let me just look that up for you!');
-        _initiateTokenFetch();
-        session.send('The nearest branch in ', session.message.text, 'is at.... ');
         session.endDialog();
     }
 ).triggerAction({
