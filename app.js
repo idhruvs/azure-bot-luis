@@ -1,10 +1,14 @@
 /*-----------------------------------------------------------------------------
 A simple Language Understanding (LUIS) bot for the Microsoft Bot Framework. 
 -----------------------------------------------------------------------------*/
+require('dotenv').config();
 
 var restify = require('restify');
 var builder = require('botbuilder');
 var botbuilder_azure = require("botbuilder-azure");
+var request = require('request');
+
+var Store = require('./handlers/store');
 
 // Setup Restify Server
 var server = restify.createServer();
@@ -12,49 +16,30 @@ server.listen(process.env.port || process.env.PORT || 3978, '127.0.0.1' ,functio
     console.log('%s listening to %s', server.name, server.url); 
 });
 
-
 // Create chat connector for communicating with the Bot Framework Service
 var connector = new builder.ChatConnector({
     appId: process.env.MicrosoftAppId,
-    appPassword: process.env.MicrosoftAppPassword,
-    openIdMetadata: process.env.BotOpenIdMetadata 
+    appPassword: process.env.MicrosoftAppPassword
 });
+
+var inMemoryStorage = new builder.MemoryBotStorage();
 
 // Listen for messages from users 
 server.post('/api/messages', connector.listen());
-
-/*----------------------------------------------------------------------------------------
-* Bot Storage: This is a great spot to register the private state storage for your bot. 
-* We provide adapters for Azure Table, CosmosDb, SQL Azure, or you can implement your own!
-* For samples and documentation, see: https://github.com/Microsoft/BotBuilder-Azure
-* ---------------------------------------------------------------------------------------- */
-
-var tableName = 'botdata';
-var azureTableClient = new botbuilder_azure.AzureTableClient(tableName, process.env['AzureWebJobsStorage']);
-var tableStorage = new botbuilder_azure.AzureBotStorage({ gzipData: false }, azureTableClient);
 
 // Create your bot with a function to receive messages from the user
 // This default message handler is invoked if the user's utterance doesn't
 // match any intents handled by other dialogs.
 var bot = new builder.UniversalBot(connector, function (session, args) {
     session.send('You reached the default message handler. You said \'%s\'.', session.message.text);
-});
+}).set('storage', inMemoryStorage);
 
-bot.set('storage', tableStorage);
-
-// Make sure you add code to validate these fields
-var luisAppId = process.env.LuisAppId;
-var luisAPIKey = process.env.LuisAPIKey;
-var luisAPIHostName = process.env.LuisAPIHostName || 'westus.api.cognitive.microsoft.com';
-
-const LuisModelUrl = 'https://' + luisAPIHostName + '/luis/v2.0/apps/' + luisAppId + '?subscription-key=' + luisAPIKey;
+const LuisModelUrl = process.env.LuisModelUrl;
 
 // Create a recognizer that gets intents from LUIS, and add it to the bot
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 bot.recognizer(recognizer);
 
-// Add a dialog for each intent that the LUIS app recognizes.
-// See https://docs.microsoft.com/en-us/bot-framework/nodejs/bot-builder-nodejs-recognize-intent-luis 
 bot.dialog('GreetingDialog',
     (session) => {
         session.send('Hello! Welcome to YBS Chat. How may I help you?');
@@ -70,6 +55,12 @@ bot.dialog('Branch-Locater',
         var location = locationObject['entity'];
         location = location[0].toUpperCase() + location.slice(1);
         session.send('Sure! Let me just look up the nearest branch in \%s\ for you! ', location);
+        Store.storeLocator(location).then( function(stores) {
+            session.send('I have found %s branches in %s for you.', stores.branches.length, location);
+            session.send('The nearest branch is %s away', stores.branches[0].distance);
+            session.send('The details of the nearest branch are: \n Address: %s \n Phone: %s', stores.branches[0].address, stores.branches[0].phone);
+        });
+        
         session.endDialog();
     }
 ).triggerAction({

@@ -6,15 +6,18 @@
   "dependencies": {
     "botbuilder": "^3.13.1",
     "botbuilder-azure": "^3.0.4",
+    "dot-env": "0.0.1",
+    "dotenv": "^5.0.1",
     "fetch": "^1.1.0",
     "node-fetch": "^2.1.2",
     "restify": "^5.0.0"
   },
   "devDependencies": {
-    "request": "^2.81.0",
+    "request": "^2.87.0",
     "zip-folder": "^1.0.0"
   },
   "scripts": {
+    "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
