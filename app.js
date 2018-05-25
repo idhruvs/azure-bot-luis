@@ -49,21 +49,39 @@ bot.dialog('GreetingDialog',
     matches: 'Greeting'
 })
 
-bot.dialog('Branch-Locater',
-    (session, args) => {
+bot.dialog('Branch-Locater', [
+    // Initial function for Branch-locator intent        
+    (session, args, next) => {
         var locationObject = builder.EntityRecognizer.findEntity(args.intent.entities, 'City');
-        var location = locationObject['entity'];
-        location = location[0].toUpperCase() + location.slice(1);
-        session.send('Sure! Let me just look up the nearest branch in \%s\ for you! ', location);
-        Store.storeLocator(location).then( function(stores) {
-            session.send('I have found %s branches in %s for you.', stores.branches.length, location);
-            session.send('The nearest branch is %s away', stores.branches[0].distance);
-            session.send('The details of the nearest branch are: \n Address: %s \n Phone: %s', stores.branches[0].address, stores.branches[0].phone);
+        if(!locationObject){
+            builder.Prompts.text(session, 'At which location are you looking for a YBS Branch?');
+        }
+        else {
+            var location = locationObject['entity'];
+            next({response: location})
+        }
+    },
+    (session, results, next) => {
+        const response = results.response;
+        session.send('Sure! Let me just look up the nearest branch in \%s\ for you! ', response);
+        
+        // Async Call to StoreLocator Handler
+
+        Store.storeLocator(response).then( function(stores) {
+            setTimeout(()=> {
+                session.send('I have found %s branches in %s for you.', stores.branches.length, response);
+            }, 250);
+            setTimeout(()=> {
+                session.send('The nearest branch is %s away', stores.branches[0].distance);    
+            }, 250);
+            setTimeout(()=> {
+                session.send('The details of the nearest branch are: \n Address: %s \n Phone: %s', stores.branches[0].address, stores.branches[0].phone);
+            }, 250);
         });
         
         session.endDialog();
     }
-).triggerAction({
+]).triggerAction({
     matches: 'Branch-Locater'
 })
 
