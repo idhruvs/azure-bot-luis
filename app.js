@@ -15,7 +15,7 @@ var prn=dat.substring(1,11);
     
 // Setup Restify Server
 var server = restify.createServer();
-server.listen(process.env.port || process.env.PORT || 3978, '127.0.0.1', function () {
+server.listen(process.env.port || process.env.PORT || 3978, function () {
     
     console.log(prn);
     var nextDate=moment(prn, 'YYYY-MM-DD').nextBusinessDay()._d;
@@ -41,9 +41,9 @@ var bot = new builder.UniversalBot(connector, function (session, args) {
 
 bot.set('storage', inMemoryStorage);
 var count;
-var luisAppId = process.env.LuisAppId ||  '7c596bb6-39c0-43fc-84d8-e16021c36ef5';
-var luisAPIKey = process.env.LuisAPIKey || '3dfeb35610a34c0fb1956d8b64db22d8';
-var luisAPIHostName = process.env.LuisAPIHostName || 'westus.api.cognitive.microsoft.com';
+var luisAppId = '7c596bb6-39c0-43fc-84d8-e16021c36ef5';
+var luisAPIKey =  '3dfeb35610a34c0fb1956d8b64db22d8';
+var luisAPIHostName = 'westus.api.cognitive.microsoft.com';
 
 const LuisModelUrl = 'https://' + luisAPIHostName + '/luis/v2.0/apps/' + luisAppId + '?subscription-key=' + luisAPIKey;
 

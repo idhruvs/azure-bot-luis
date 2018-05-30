@@ -1,0 +1,15 @@
+{
+    "name": "Online-Bot",
+    "description": "",
+    "secretKey": "",
+    "services": [
+        {
+            "appId": "cc3bd102-91f1-4c0a-8498-f49434f92403",
+            "id": "e48909a0-6444-11e8-8933-ef4c17f172cc",
+            "type": "endpoint",
+            "appPassword": "5|0R|rc_@qxr/Xxw",
+            "endpoint": "https://mortgage-luis.azurewebsites.net/api/messages",
+            "name": "https://mortgage-luis.azurewebsites.net/api/messages"
+        }
+    ]
+}
