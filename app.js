@@ -118,7 +118,7 @@ bot.dialog('LocationDetails', [
         
         console.log('Selected Location: ', selectedLocation);
         const message = `Address:  ${locations[selectedIndex].address} \n Distance: ${locations[selectedIndex].distance}`;
-        const options = ['Book an Appointment', 'Select Another Branch'];
+        const options = ['Book Appointment', 'Select Other'];
 
         builder.Prompts.choice(
             session, 
