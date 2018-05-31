@@ -3,27 +3,18 @@ var builder = require('botbuilder');
 var botbuilder_azure = require("botbuilder-azure");
 var request = require('request');
 
-var moment = require('moment-business-days');
+var momentBusiness = require('moment-business-days');
+var moment = require('moment');
 
-moment.locale('us', {
-   workingWeekdays: [1,2,3,4,5,6] 
+momentBusiness.locale('en-gb', {
+   workingWeekdays: [1,2,3,4,5] 
 });
-
-var date=new Date();
-var dat=JSON.stringify(date);
-var prn=dat.substring(1,11);
-    
+var dat = JSON.stringify(new Date()).substring(1,11);
 // Setup Restify Server
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
-    
-    console.log(prn);
-    var nextDate=moment(prn, 'YYYY-MM-DD').nextBusinessDay()._d;
-    nextDate=JSON.stringify(nextDate);
-    var next=nextDate.substring(1,11);
-    console.log(next);
-    var nextDat=moment(nextDate, 'YYYY-MM-DD').nextBusinessDay()._d;
-    console.log(nextDat);
+    console.log(new Date());
+    console.log(momentBusiness(JSON.stringify(new Date()).substring(1,11), 'YYYY-MM-DD').nextBusinessDay());
     console.log('%s listening to %s', server.name, server.url); 
 });
   
@@ -140,64 +131,34 @@ bot.dialog('LocationDetails', [
 
 
 bot.beginDialogAction('dayButtonClick','/dayButtonClick');
-bot.dialog('/dayButtonClick',function (session, args) {
-        // Save size if prompted
-   // session.send("Thanks you for choosing for Book an Appointment. Please select the appropriate Date.");
-         var msg = new builder.Message(session);
-         console.log(session.data);
-       msg.attachmentLayout(builder.AttachmentLayout.carousel)
-    
-   msg.text("Please select the appropriate date for an appointment.");
-      var dateArray=[];
-       for(var j=0;j<6;j++)
-    {
-        var prn=dat;
-        var nextDate=prn.substring(1,11);
-       dateArray.push(new builder.HeroCard(session)
-            
-            .buttons([
-                 builder.CardAction.dialogAction(session, 'timeButtonClick','Mon', nextDate)
-            ]))
-            nextDate=moment(prn, 'YYYY-MM-DD').nextBusinessDay()._d;
-            nextDate=JSON.stringify(nextDate);
-            dat=nextDate;
-    }
-    
-    msg.attachments(dateArray);
-       // msg.attachments([ new builder.HeroCard(session)
-        //    
-        //     .buttons([
-        //         builder.CardAction.dialogAction(session, 'timeButtonClick','Mon', "Monday")
-        //     ]),
-        //     new builder.HeroCard(session)
-        //    
-        //     .buttons([
-        //         builder.CardAction.dialogAction(session, 'timeButtonClick','Tue', "Tuesday")
-        //     ]),
-        //     new builder.HeroCard(session)
-        //    
-        //     .buttons([
-        //         builder.CardAction.dialogAction(session, 'timeButtonClick','Wed', "Wednesday")
-        //     ]),
-        //     new builder.HeroCard(session)
-        //    
-        //     .buttons([
-        //         builder.CardAction.dialogAction(session, 'timeButtonClick','Thu', "Thursday")
-        //     ]),
-        //     new builder.HeroCard(session)
-        //    
-        //     .buttons([
-        //         builder.CardAction.dialogAction(session, 'timeButtonClick','Fri', "Friday")
-        //     ]),
-        //     new builder.HeroCard(session)
-        //    
-        //     .buttons([
-        //         builder.CardAction.dialogAction(session, 'timeButtonClick','Sat', "Saturday")
-        //     ])])
-  
-         session.send(msg);
+bot.dialog('/dayButtonClick',
+    [
+        (session, args) => {
+            var msg = new builder.Message(session);
+            msg.text("Please select the appropriate date for an appointment.");
+            var dateArray=[];
+            for(var j=0;j<6;j++)
+            {
+                var prn=dat;
+                var nextDate=prn.substring(1,11);
+                dateArray.push(new builder.HeroCard(session)
+                    
+                    .buttons([
+                        builder.CardAction.dialogAction(session, 'timeButtonClick','Mon', nextDate)
+                    ]))
+                    nextDate=momentBusiness(prn, 'YYYY-MM-DD').nextBusinessDay();
 
-         });
+                    nextDate=JSON.stringify(nextDate);
+                    dat=nextDate;
+                    console.log(nextDate);
+
+            }
+            
+            session.send(msg);
+
+        }
+    ]
+);
          
        bot.beginDialogAction('timeButtonClick','/timeButtonClick');
 bot.dialog('/timeButtonClick',function (session, args) {
