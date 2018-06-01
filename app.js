@@ -104,7 +104,7 @@ bot.dialog('LocationDetails', [
         console.log(selectedBranchObject);
 
         const message = `<b>Branch Details<b>:  \n Address:  ${locations[selectedIndex].address} \n Distance: ${locations[selectedIndex].distance}`;
-        const options = ['Book Appointment', 'Select Other'];
+        const options = ['Book an Appointment', 'Select Other'];
 
         builder.Prompts.choice(
             session, 
@@ -163,6 +163,8 @@ bot.dialog('/timeButtonClick',
             // Save size if prompted
             // session.send("Thanks you for choosing for Book an Appointment. Please select the appropriate Date.");
             var message = " Please select your suitable time."
+            console.log('>>>>>>>>>>>>');
+            console.log(selectedBranchObject);
             var availableSlots = selectedBranchObject.availableSlot.timing;
             builder.Prompts.choice(
                 session, 
@@ -173,11 +175,61 @@ bot.dialog('/timeButtonClick',
         },
         (session, results) => {
             selectedScheduleObject.time = results.response.entity;
-            session.send("Thank you for selecting Date and Time, Here are the Appointment Details");
+            session.send("Great! I've setup an appointment with an Agent at %s branch. Here are the Appointment Details", selectedBranchObject.branchName);
             session.send('Branch Name: %s \n Date: %s \n Time: %s', selectedBranchObject.branchName, selectedScheduleObject.date, selectedScheduleObject.time );
         }   
     ]
 );
+
+bot.dialog('BookAppointmentDialog', 
+    [ 
+        (session, args, next) => {
+            var intent = args.intent;
+            title = builder.EntityRecognizer.findEntity(intent.entities, 'Weather.Location');
+            console.log("titleee---",title);
+                var note = session.dialogData.note = {
+                title: title ? title.entity : null,
+            };
+            var localtionurl1='https://ybsg-nonprod-dev.apigee.net/mortgage/v1.0/applications/branchLocator?postcode='+title.entity;
+            request(localtionurl1, function (error, response, body) {
+                if (!error && response.statusCode == 200) {
+                    //session.send("Thank you for sharing your location.Here are the options for your nearby branches.Please select your appropriate branch");
+                    var result=JSON.parse(body);
+                    
+
+                    session.send("Let's book an appointment for you.");
+
+                    if(selectedBranchObject.address){
+                        bot.beginDialog('/dayButtonClick')    
+                    }
+                    else {
+                        session.send("Please select your appropriate location that you intend to visit.");
+                        console.log(result.branches);
+                        const message = 'Here are the nearby branches as per your location';
+                        const locationNames = [];
+                        locations = result.branches;
+                        result.branches.forEach(element => {
+                            locationNames.push(element.branchName);
+                        });
+                        builder.Prompts.choice(
+                            session,
+                            message,
+                            locationNames,
+                            { listStyle: builder.ListStyle.button }
+                        );
+
+                    }
+                }
+            })
+        },
+        (session, results) => {
+            selectedBranchObject = locations[results.response.index];
+            session.beginDialog('/dayButtonClick');
+        }
+    ]
+).triggerAction({
+    matches: 'BookAppointment'
+});
 
 
 bot.dialog('CancelDialog',
