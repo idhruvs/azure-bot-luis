@@ -5,16 +5,11 @@ var request = require('request');
 
 var momentBusiness = require('moment-business-days');
 var moment = require('moment');
+momentBusiness.locale('en-gb');
 
-momentBusiness.locale('en-gb', {
-   workingWeekdays: [1,2,3,4,5] 
-});
-var dat = JSON.stringify(new Date()).substring(1,11);
 // Setup Restify Server
 var server = restify.createServer();
-server.listen(process.env.port || process.env.PORT || 3978, function () {
-    console.log(new Date());
-    console.log(momentBusiness(JSON.stringify(new Date()).substring(1,11), 'YYYY-MM-DD').nextBusinessDay());
+server.listen(process.env.port || process.env.PORT || 3978, '127.0.0.1' ,function () {
     console.log('%s listening to %s', server.name, server.url); 
 });
   
@@ -61,6 +56,8 @@ bot.dialog('HelpDialog',
 
 var title="";
 var locations=[];
+var selectedBranchObject = {};
+var selectedScheduleObject = {};
 
 bot.dialog('LocationDialog',
     [ 
@@ -106,9 +103,10 @@ bot.dialog('LocationDetails', [
     (session, results) => {
         const selectedLocation = results.response.entity;
         const selectedIndex = results.response.index;
-        
-        console.log('Selected Location: ', selectedLocation);
-        const message = `Address:  ${locations[selectedIndex].address} \n Distance: ${locations[selectedIndex].distance}`;
+        selectedBranchObject = locations[selectedIndex];
+        console.log(selectedBranchObject);
+
+        const message = `<b>Branch Details<b>:  \n Address:  ${locations[selectedIndex].address} \n Distance: ${locations[selectedIndex].distance}`;
         const options = ['Book Appointment', 'Select Other'];
 
         builder.Prompts.choice(
@@ -134,42 +132,39 @@ bot.beginDialogAction('dayButtonClick','/dayButtonClick');
 bot.dialog('/dayButtonClick',
     [
         (session, args) => {
-            var msg = new builder.Message(session);
-            msg.text("Please select the appropriate date for an appointment.");
-            var dateArray=[];
-            for(var j=0;j<6;j++)
-            {
-                var prn=dat;
-                var nextDate=prn.substring(1,11);
-                dateArray.push(new builder.HeroCard(session)
-                    
-                    .buttons([
-                        builder.CardAction.dialogAction(session, 'timeButtonClick','Mon', nextDate)
-                    ]))
-                    nextDate=momentBusiness(prn, 'YYYY-MM-DD').nextBusinessDay();
-
-                    nextDate=JSON.stringify(nextDate);
-                    dat=nextDate;
-                    console.log(nextDate);
-
+            const message = 'Please select the appropriate date for an appointment.';
+            const fiveBusinessDays=[];
+            let todayDate=momentBusiness(new Date()).format('DD-MM-YYYY');
+            fiveBusinessDays.push(todayDate);
+            for(let i=0;i<5;i++){
+                const nextDate=momentBusiness(todayDate, 'DD-MM-YYYY').nextBusinessDay()._d;
+                fiveBusinessDays.push(moment(nextDate).format('DD-MM-YYYY'));
+                todayDate=nextDate;
             }
-            
-            session.send(msg);
-
+            builder.Prompts.choice(
+                session, 
+                message,
+                fiveBusinessDays,
+                { listStyle: builder.ListStyle.button }
+            );
+        },
+        (session, results) => {
+            selectedDate = results.response;
+            console.log('Selected Date: ', selectedDate);
+            session.beginDialog('/timeButtonClick');
         }
     ]
 );
-         
-       bot.beginDialogAction('timeButtonClick','/timeButtonClick');
-bot.dialog('/timeButtonClick',function (session, args) {
+    bot.beginDialogAction('timeButtonClick','/timeButtonClick');
+    bot.dialog('/timeButtonClick',function (session, args) {
         // Save size if prompted
-   // session.send("Thanks you for choosing for Book an Appointment. Please select the appropriate Date.");
-         var msg = new builder.Message(session);
-       msg.attachmentLayout(builder.AttachmentLayout.carousel)
+        // session.send("Thanks you for choosing for Book an Appointment. Please select the appropriate Date.");
+        var msg = new builder.Message(session);
+        msg.attachmentLayout(builder.AttachmentLayout.carousel)
     
-   msg.text(" Please select your suitable time.");
+        msg.text(" Please select your suitable time.");
        
-       msg.attachments([ new builder.HeroCard(session)
+        msg.attachments([ new builder.HeroCard(session)
            
             .buttons([
                 builder.CardAction.dialogAction(session, 'finalButtonClick','Mon', "10 am to 11 am")
@@ -185,20 +180,7 @@ bot.dialog('/timeButtonClick',function (session, args) {
                 builder.CardAction.dialogAction(session, 'finalButtonClick','Wed', "12 pm to 1 pm ")
             ]),
             new builder.HeroCard(session)
-           
-            .buttons([
-                builder.CardAction.dialogAction(session, 'finalButtonClick','Thu', "2 pm to 3 pm")
-            ]),
-            new builder.HeroCard(session)
-           
-            .buttons([
-                builder.CardAction.dialogAction(session, 'finalButtonClick','Fri', "3 pm to 4 pm")
-            ]),
-            new builder.HeroCard(session)
-           
-            .buttons([
-                builder.CardAction.dialogAction(session, 'finalButtonClick','Sat', "4 pm to 5 pm")
-            ])])
+        ])
   
          session.send(msg);
 
