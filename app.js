@@ -176,11 +176,11 @@ bot.dialog('BookDialog',[ function (session, args, next) {
         // Resolve and store any Note.Title entity passed from LUIS.
         var intent = args.intent;
         title = builder.EntityRecognizer.findEntity(intent.entities, 'Weather.Location');
-console.log("titleee---",title);
-        var note = session.dialogData.note = {
-          title: title ? title.entity : null,
+        console.log("titleee---",title);
+            var note = session.dialogData.note = {
+            title: title ? title.entity : null,
         };
-        
+                
    
     {
         var localtionurl1='https://ybsg-nonprod-dev.apigee.net/mortgage/v1.0/applications/branchLocator?postcode='+title.entity;
