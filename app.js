@@ -8,11 +8,15 @@ var builder = require('botbuilder');
 var botbuilder_azure = require("botbuilder-azure");
 var request = require('request');
 
+var momentBusiness = require('moment-business-days');
+var moment = require('moment');
+momentBusiness.locale('en-gb');
+
 var Store = require('./handlers/store');
 
 // Setup Restify Server
 var server = restify.createServer();
-server.listen(process.env.port || process.env.PORT || 3978, '127.0.0.1' ,function () {
+server.listen(process.env.port || process.env.PORT || 3978, function () {
     console.log('%s listening to %s', server.name, server.url); 
 });
 
@@ -49,41 +53,131 @@ bot.dialog('GreetingDialog',
     matches: 'Greeting'
 })
 
+var locations = [];
+var selectedBranchObject = {};
+var selectedScheduleObject = {}
+
 bot.dialog('Branch-Locater', [
     // Initial function for Branch-locator intent        
-    (session, args, next) => {
-        var locationObject = builder.EntityRecognizer.findEntity(args.intent.entities, 'City');
-        if(!locationObject){
-            builder.Prompts.text(session, 'At which location are you looking for a YBS Branch?');
-        }
-        else {
-            var location = locationObject['entity'];
-            next({response: location})
-        }
-    },
-    (session, results, next) => {
-        const response = results.response;
-        session.send('Sure! Let me just look up the nearest branch in \%s\ for you! ', response);
+    (session, args, next) => 
+        {
+            var intent = args.intent;
+            title = builder.EntityRecognizer.findEntity(intent.entities, 'Weather.Location');
+            console.log("title---",title);
+            var note = session.dialogData.note = {
+            title: title ? title.entity : null,
+            };
         
-        // Async Call to StoreLocator Handler
-
-        Store.storeLocator(response).then( function(stores) {
-            setTimeout(()=> {
-                session.send('I have found %s branches in %s for you.', stores.branches.length, response);
-            }, 250);
-            setTimeout(()=> {
-                session.send('The nearest branch is %s away', stores.branches[0].distance);    
-            }, 250);
-            setTimeout(()=> {
-                session.send('The details of the nearest branch are: \n Address: %s \n Phone: %s', stores.branches[0].address, stores.branches[0].phone);
-            }, 250);
-        });
-        
-        session.endDialog();
-    }
-]).triggerAction({
+            var localtionurl1='https://ybsg-nonprod-dev.apigee.net/mortgage/v1.0/applications/branchLocator?postcode='+title.entity;
+            request(localtionurl1, function (error, response, body) {
+                if (!error && response.statusCode == 200) {
+                    //session.send("Thank you for Location.Here are the option for your nearby branches.Please select your appropriate branch");
+                        var result=JSON.parse(body);
+                        console.log("print result----",result.branches[0]);
+                            var msg = new builder.Message(session);
+                            msg.text("Thank you for sharing your location.Here are the options for your nearby branches.");
+                        
+                    msg.attachmentLayout(builder.AttachmentLayout.carousel)
+                    locations = result.branches;
+                    session.beginDialog('LocationDetails');
+                }
+            })
+        }
+    ]).triggerAction({
     matches: 'Branch-Locater'
 })
+
+bot.dialog('LocationDetails', [
+    (session) => {
+        const locationNames = locations.map(element => element.branchName);
+        builder.Prompts.choice(
+            session, 
+            "Here are the options for your nearby branches. Please select appropriate branch for more details", 
+            locationNames, 
+            { listStyle: builder.ListStyle.button }
+        );
+    },
+    (session, results) => {
+        const selectedLocation = results.response.entity;
+        const selectedIndex = results.response.index;
+        selectedBranchObject = locations[selectedIndex];
+        console.log(selectedBranchObject);
+
+        const message = `<b>Branch Details<b>:  \n Address:  ${locations[selectedIndex].address} \n Distance: ${locations[selectedIndex].distance}`;
+        const options = ['Book Appointment', 'Select Other'];
+
+        builder.Prompts.choice(
+            session, 
+            message,
+            options,
+            { listStyle: builder.ListStyle.button }
+        );
+    },
+    (session, results) => {
+        const selectedOption = results.response.index;
+        if(selectedOption == 0) {
+            session.beginDialog('/dayButtonClick');
+        }
+        else {
+            session.beginDialog('LocationDetails');
+        }
+    }
+]);
+
+
+bot.beginDialogAction('dayButtonClick','/dayButtonClick');
+
+bot.dialog('/dayButtonClick',
+    [
+        (session, args) => {
+            const message = 'Please select the appropriate date for an appointment.';
+            const fiveBusinessDays=[];
+            let todayDate=momentBusiness(new Date()).format('DD-MM-YYYY');
+            fiveBusinessDays.push(todayDate);
+            for(let i=0;i<5;i++){
+                const nextDate=momentBusiness(todayDate, 'DD-MM-YYYY').nextBusinessDay()._d;
+                fiveBusinessDays.push(moment(nextDate).format('DD-MM-YYYY'));
+                todayDate=nextDate;
+            }
+            builder.Prompts.choice(
+                session, 
+                message,
+                fiveBusinessDays,
+                { listStyle: builder.ListStyle.button }
+            );
+        },
+        (session, results) => {
+            selectedDate = results.response;
+            console.log('Selected Date: ', selectedDate);
+            
+            selectedScheduleObject.date = selectedDate.entity;
+            session.beginDialog('/timeButtonClick');
+        }
+    ]
+);
+
+bot.beginDialogAction('timeButtonClick','/timeButtonClick');
+bot.dialog('/timeButtonClick',
+    [
+        (session, args) => {
+            // Save size if prompted
+            // session.send("Thanks you for choosing for Book an Appointment. Please select the appropriate Date.");
+            var message = " Please select your suitable time."
+            var availableSlots = selectedBranchObject.availableSlot.timing;
+            builder.Prompts.choice(
+                session, 
+                message,
+                availableSlots,
+                { listStyle: builder.ListStyle.button }
+            );
+        },
+        (session, results) => {
+            selectedScheduleObject.time = results.response.entity;
+            session.send("Thank you for selecting Date and Time, Here are the Appointment Details");
+            session.send('Branch Name: %s \n Date: %s \n Time: %s', selectedBranchObject.branchName, selectedScheduleObject.date, selectedScheduleObject.time );
+        }   
+    ]
+);
 
 
 bot.dialog('CancelDialog',
