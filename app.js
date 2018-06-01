@@ -9,7 +9,7 @@ momentBusiness.locale('en-gb');
 
 // Setup Restify Server
 var server = restify.createServer();
-server.listen(process.env.port || process.env.PORT || 3978,function () {
+server.listen(process.env.port || process.env.PORT || 3978, '127.0.0.1' ,function () {
     console.log('%s listening to %s', server.name, server.url); 
 });
   
@@ -36,30 +36,14 @@ const LuisModelUrl = 'https://' + luisAPIHostName + '/luis/v2.0/apps/' + luisApp
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 bot.recognizer(recognizer);
 
-bot.dialog('GreetingDialog',
-    (session) => {
-        session.send('Hello User, I am your Virtal Assistant, How may I help you today?');
-        session.endDialog();
-    }
-).triggerAction({
-    matches: 'Greeting'
-})
 
-bot.dialog('HelpDialog',
-    (session) => {
-        session.send('You reached the Help intent. You said \'%s\'.', session.message.text);
-        session.endDialog();
-    }
-).triggerAction({
-    matches: 'Help'
-})
 
 var title="";
 var locations=[];
 var selectedBranchObject = {};
 var selectedScheduleObject = {};
 
-bot.dialog('Branch-Locator',
+bot.dialog('Branch-Locater',
     [ 
         (session, args, next) => 
         {
@@ -86,7 +70,7 @@ bot.dialog('Branch-Locator',
             })
         }]
 ).triggerAction({
-    matches: 'Location'
+    matches: 'Branch-Locater'
 })
 
 bot.dialog('LocationDetails', [
@@ -248,4 +232,22 @@ bot.dialog('CancelDialog',
     }
 ).triggerAction({
     matches: 'Cancel'
+})
+
+bot.dialog('GreetingDialog',
+    (session) => {
+        session.send('Hello User, I am your Virtal Assistant, How may I help you today?');
+        session.endDialog();
+    }
+).triggerAction({
+    matches: 'Greeting'
+})
+
+bot.dialog('HelpDialog',
+    (session) => {
+        session.send('You reached the Help intent. You said \'%s\'.', session.message.text);
+        session.endDialog();
+    }
+).triggerAction({
+    matches: 'Help'
 })
