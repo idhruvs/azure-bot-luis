@@ -198,9 +198,10 @@ bot.dialog('BookAppointmentDialog',
                     
 
                     session.send("Let's book an appointment for you.");
-
+                    console.log('locations before condition check: ', locations);
                     if(locations.length>0){
-                        bot.beginDialog('/dayButtonClick')    
+                        console.log('inside the condition:', locations);
+                        session.beginDialog('/dayButtonClick')    
                     }
                     else {
                         session.send("Please select your appropriate location that you intend to visit.");
