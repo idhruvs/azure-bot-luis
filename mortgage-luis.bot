@@ -1,0 +1,15 @@
+{
+    "name": "mortgage-luis",
+    "description": "",
+    "secretKey": "",
+    "services": [
+        {
+            "appId": "",
+            "id": "1a7be650-6039-11e8-bf2e-4b226d29b2f6",
+            "type": "endpoint",
+            "appPassword": "",
+            "endpoint": "http://127.0.0.1:3978/api/messages",
+            "name": "http://127.0.0.1:3978/api/messages"
+        }
+    ]
+}
