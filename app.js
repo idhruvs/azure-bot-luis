@@ -9,7 +9,7 @@ momentBusiness.locale('en-gb');
 
 // Setup Restify Server
 var server = restify.createServer();
-server.listen(process.env.port || process.env.PORT || 3978, '127.0.0.1' ,function () {
+server.listen(process.env.port || process.env.PORT || 3978 ,function () {
     console.log('%s listening to %s', server.name, server.url); 
 });
   
@@ -151,46 +151,41 @@ bot.dialog('/dayButtonClick',
         (session, results) => {
             selectedDate = results.response;
             console.log('Selected Date: ', selectedDate);
+            
+            selectedScheduleObject.date = selectedDate.entity;
             session.beginDialog('/timeButtonClick');
         }
     ]
 );
     bot.beginDialogAction('timeButtonClick','/timeButtonClick');
-    bot.dialog('/timeButtonClick',function (session, args) {
-        // Save size if prompted
-        // session.send("Thanks you for choosing for Book an Appointment. Please select the appropriate Date.");
-        var msg = new builder.Message(session);
-        msg.attachmentLayout(builder.AttachmentLayout.carousel)
-    
-        msg.text(" Please select your suitable time.");
-       
-        msg.attachments([ new builder.HeroCard(session)
-           
-            .buttons([
-                builder.CardAction.dialogAction(session, 'finalButtonClick','Mon', "10 am to 11 am")
-            ]),
-            new builder.HeroCard(session)
-           
-            .buttons([
-                builder.CardAction.dialogAction(session, 'finalButtonClick','Tue', "11 am to 12 ")
-            ]),
-            new builder.HeroCard(session)
-           
-            .buttons([
-                builder.CardAction.dialogAction(session, 'finalButtonClick','Wed', "12 pm to 1 pm ")
-            ]),
-            new builder.HeroCard(session)
-        ])
-  
-         session.send(msg);
+    bot.dialog('/timeButtonClick',
+        [
+            (session, args) => {
+                // Save size if prompted
+                // session.send("Thanks you for choosing for Book an Appointment. Please select the appropriate Date.");
+                var msg = " Please select your suitable time."
+                var availableSlots = selectedBranchObject.availableSlots.timing;
+                builder.Prompts.choice(
+                    session, 
+                    message,
+                    availableSlots,
+                    { listStyle: builder.ListStyle.button }
+                );
+                session.send(msg);
 
-         });
-  
-         
-          bot.beginDialogAction('finalButtonClick','/finalButtonClick');
-bot.dialog('/finalButtonClick',function (session, args) {
-    session.send("Thank you for selecting Date and Time, Here are the Appointment Details");
-});
+            },
+            (session, results) => {
+                selectedScheduleObject.time = results.response.entity;
+                session.send("Thank you for selecting Date and Time, Here are the Appointment Details");
+                session.send('Branch Name: %s \n Date: %s \n Time: %s', selectedBranchObject.branchName, selectedScheduleObject.date, selectedScheduleObject.time );
+            }   
+        ]
+    );
+
+    bot.beginDialogAction('finalButtonClick','/finalButtonClick');
+    bot.dialog('/finalButtonClick',function (session, args) {
+        session.send("Thank you for selecting Date and Time, Here are the Appointment Details");
+    });
          
          
          
