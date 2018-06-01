@@ -199,7 +199,7 @@ bot.dialog('BookAppointmentDialog',
 
                     session.send("Let's book an appointment for you.");
 
-                    if(selectedBranchObject.address){
+                    if(locations.length>0){
                         bot.beginDialog('/dayButtonClick')    
                     }
                     else {
