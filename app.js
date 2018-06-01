@@ -9,7 +9,7 @@ momentBusiness.locale('en-gb');
 
 // Setup Restify Server
 var server = restify.createServer();
-server.listen(process.env.port || process.env.PORT || 3978 ,function () {
+server.listen(process.env.port || process.env.PORT || 3978,function () {
     console.log('%s listening to %s', server.name, server.url); 
 });
   
@@ -27,8 +27,8 @@ var bot = new builder.UniversalBot(connector, function (session, args) {
 
 bot.set('storage', inMemoryStorage);
 var count;
-var luisAppId = '7c596bb6-39c0-43fc-84d8-e16021c36ef5';
-var luisAPIKey =  '3dfeb35610a34c0fb1956d8b64db22d8';
+var luisAppId = process.env.LuisAppId;
+var luisAPIKey =  process.env.LuisAPIKey;
 var luisAPIHostName = 'westus.api.cognitive.microsoft.com';
 
 const LuisModelUrl = 'https://' + luisAPIHostName + '/luis/v2.0/apps/' + luisAppId + '?subscription-key=' + luisAPIKey;
@@ -59,11 +59,10 @@ var locations=[];
 var selectedBranchObject = {};
 var selectedScheduleObject = {};
 
-bot.dialog('LocationDialog',
+bot.dialog('Branch-Locator',
     [ 
         (session, args, next) => 
         {
-            // Resolve and store any Note.Title entity passed from LUIS.
             var intent = args.intent;
             title = builder.EntityRecognizer.findEntity(intent.entities, 'Weather.Location');
             console.log("title---",title);
