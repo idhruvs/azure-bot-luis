@@ -175,7 +175,11 @@ bot.dialog('/timeButtonClick',
         },
         async (session, results) => {
             selectedScheduleObject.time = results.response.entity;
-            await Store.makeAppointment( selectedScheduleObject.time , selectedBranchObject.date );
+            try {
+                await Store.makeAppointment( selectedScheduleObject.time , selectedBranchObject.date );
+            }catch(err){
+                console.log(err)
+            }
             session.send("Great! I've setup an appointment with an Agent at %s branch. Here are the Appointment Details", selectedBranchObject.branchName);
             session.send('Branch Name: %s \n Date: %s \n Time: %s', selectedBranchObject.branchName, selectedScheduleObject.date, selectedScheduleObject.time );
         }   
