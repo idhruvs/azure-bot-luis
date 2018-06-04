@@ -103,7 +103,7 @@ bot.dialog('LocationDetails', [
         selectedBranchObject = locations[selectedIndex];
         console.log(selectedBranchObject);
 
-        const message = `<b>Branch Details<b>:  \n Address:  ${locations[selectedIndex].address} \n Distance: ${locations[selectedIndex].distance}`;
+        const message = `Branch Details:  \n Address:  ${locations[selectedIndex].address} \n Distance: ${locations[selectedIndex].distance}`;
         const options = ['Book an Appointment', 'Select Other'];
 
         builder.Prompts.choice(
@@ -195,8 +195,6 @@ bot.dialog('BookAppointmentDialog',
                 if (!error && response.statusCode == 200) {
                     //session.send("Thank you for sharing your location.Here are the options for your nearby branches.Please select your appropriate branch");
                     var result=JSON.parse(body);
-                    
-
                     session.send("Let's book an appointment for you.");
                     console.log('locations before condition check: ', locations);
                     if(locations.length>0){
