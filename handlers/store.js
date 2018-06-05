@@ -41,7 +41,7 @@ module.exports = {
       appointmentEndTime,
       LettingAgentsEmailId: 'nsaini@ybs.co.uk', // <-This we might need to change
     };
-    const ybsAPIKey = 'N1WSjazbyA7csQ2XVxzsHRkL914d';
+    const ybsAPIKey = 'Mwd7JVAwnA5XEY6RxUWCw8Wh09ej';
     try {
       const data = await fetch(url, {
         method: 'POST',
