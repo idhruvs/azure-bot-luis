@@ -4,8 +4,8 @@ var fetch = require('node-fetch');
 const getFormattedDate = (dateToFormat, timeToFormat, isEndTime) => {
   // format date and time
   const date = dateToFormat.split('-');
-  var timeHours = timeToFormat.split('-')[0].substring(0,2);
-  var timeMinutes = timeToFormat.split('-')[0].substring(2,4);
+  const timeHours = timeToFormat.split('-')[0].substring(0,2);
+  const timeMinutes = timeToFormat.split('-')[0].substring(2,4);
 
   return new Date(
     Number(date[2]),
