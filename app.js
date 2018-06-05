@@ -176,7 +176,7 @@ bot.dialog('/timeButtonClick',
         async (session, results) => {
             selectedScheduleObject.time = results.response.entity;
             try {
-                await Store.makeAppointment( selectedScheduleObject.time , selectedBranchObject.date );
+                await Store.makeAppointment( selectedScheduleObject.time , selectedScheduleObject.date );
             }catch(err){
                 console.log(err)
             }
